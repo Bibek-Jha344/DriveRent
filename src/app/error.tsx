@@ -1,0 +1,2 @@
+'use client';
+export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <main className="grid min-h-[70vh] place-items-center px-6 text-center"><div><p className="text-sm font-bold uppercase tracking-[.2em] text-moss">Something went wrong</p><h1 className="mt-3 font-display text-5xl">The road took a turn.</h1><p className="mt-4 text-ink/60">We could not load this view. Please try again.</p><button onClick={reset} className="mt-7 rounded-full bg-ink px-6 py-3 font-semibold text-paper">Try again</button></div></main>; }

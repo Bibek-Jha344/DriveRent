@@ -1,0 +1,6 @@
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+export default async function ReviewsPage() { const user = await getCurrentUser(); if (!user) redirect('/login'); const reviews = await prisma.review.findMany({ where: { userId: user.id }, include: { vehicle: true }, orderBy: { createdAt: 'desc' } }); return <main className="min-h-screen px-6 py-14"><div className="mx-auto max-w-5xl"><p className="text-sm font-bold uppercase tracking-[.2em] text-moss">Account</p><h1 className="mt-3 font-display text-5xl">Your reviews.</h1><div className="mt-10 grid gap-4">{reviews.map((review) => <article key={review.id} className="rounded-2xl bg-white p-6 ring-1 ring-ink/10"><div className="flex justify-between"><h2 className="font-semibold">{review.vehicle.brand} {review.vehicle.model}</h2><span className="text-lime">{'★'.repeat(review.rating)}<span className="text-ink/10">{'★'.repeat(5 - review.rating)}</span></span></div><p className="mt-4 text-ink/65">{review.comment}</p></article>)}{!reviews.length && <p className="rounded-2xl border border-dashed border-ink/20 p-10 text-center text-ink/50">Your completed rentals will appear here for review.</p>}</div></div></main>; }

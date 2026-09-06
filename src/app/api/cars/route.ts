@@ -1,0 +1,4 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(request: Request) { const { searchParams } = new URL(request.url); const page = Math.max(1, Number(searchParams.get('page') || 1)); const limit = Math.min(50, Math.max(1, Number(searchParams.get('limit') || 12))); const where = { status: 'AVAILABLE' as const, ...(searchParams.get('location') ? { location: { contains: searchParams.get('location') || '', mode: 'insensitive' as const } } : {}) }; const [data, total] = await Promise.all([prisma.vehicle.findMany({ where, include: { category: true, images: true }, skip: (page - 1) * limit, take: limit, orderBy: { dailyPrice: 'asc' } }), prisma.vehicle.count({ where })]); return NextResponse.json({ data, pagination: { page, limit, total, pages: Math.ceil(total / limit) } }); }

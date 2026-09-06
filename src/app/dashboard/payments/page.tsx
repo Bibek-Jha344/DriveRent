@@ -1,0 +1,7 @@
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { formatCurrency } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
+export default async function PaymentsPage() { const user = await getCurrentUser(); if (!user) redirect('/login'); const payments = await prisma.payment.findMany({ where: { booking: { userId: user.id } }, include: { booking: { include: { vehicle: true } } }, orderBy: { createdAt: 'desc' } }); return <main className="min-h-screen px-6 py-14"><div className="mx-auto max-w-5xl"><p className="text-sm font-bold uppercase tracking-[.2em] text-moss">Account</p><h1 className="mt-3 font-display text-5xl">Payment history.</h1><div className="mt-10 overflow-hidden rounded-2xl bg-white ring-1 ring-ink/10">{payments.map((payment) => <div key={payment.id} className="flex flex-wrap items-center justify-between gap-4 border-b border-ink/10 p-5 last:border-0"><div><p className="font-semibold">{payment.booking.vehicle.brand} {payment.booking.vehicle.model}</p><p className="text-sm text-ink/50">{payment.createdAt.toLocaleDateString('en-IN')} · {payment.method}</p></div><div className="text-right"><p className="font-semibold">{formatCurrency(payment.amount)}</p><span className="text-xs font-bold text-moss">{payment.status}</span></div></div>)}{!payments.length && <p className="p-10 text-center text-ink/50">No payments found.</p>}</div></div></main>; }

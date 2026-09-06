@@ -1,0 +1,7 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { requireRole } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+const schema = z.object({ vehicleId: z.string().uuid(), type: z.string().min(2), description: z.string().min(5), startAt: z.coerce.date(), endAt: z.coerce.date(), cost: z.number().int().nonnegative(), notes: z.string().optional() });
+export async function GET() { try { await requireRole(['ADMIN', 'STAFF']); return NextResponse.json({ data: await prisma.maintenance.findMany({ include: { vehicle: true }, orderBy: { startAt: 'desc' } }) }); } catch { return NextResponse.json({ error: 'You do not have permission to view maintenance.' }, { status: 403 }); } }
+export async function POST(request: Request) { try { const user = await requireRole(['ADMIN', 'STAFF']); const parsed = schema.safeParse(await request.json()); if (!parsed.success || parsed.data.endAt <= parsed.data.startAt) return NextResponse.json({ error: 'Maintenance dates are invalid.' }, { status: 400 }); const maintenance = await prisma.maintenance.create({ data: parsed.data }); await prisma.vehicle.update({ where: { id: parsed.data.vehicleId }, data: { status: 'MAINTENANCE' } }); await prisma.auditLog.create({ data: { userId: user.id, action: 'MAINTENANCE_CREATED', entity: 'Maintenance', entityId: maintenance.id } }); return NextResponse.json({ data: maintenance }, { status: 201 }); } catch { return NextResponse.json({ error: 'Unable to create maintenance record.' }, { status: 400 }); } }

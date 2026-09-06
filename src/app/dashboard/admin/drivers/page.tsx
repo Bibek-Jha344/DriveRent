@@ -1,0 +1,6 @@
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+export default async function AdminDrivers() { const user = await getCurrentUser(); if (!user || !['ADMIN', 'STAFF'].includes(user.role.name)) redirect('/dashboard'); const drivers = await prisma.driver.findMany({ include: { _count: { select: { bookings: true } } }, orderBy: { name: 'asc' } }); return <main className="min-h-screen bg-ink px-6 py-12 text-paper"><div className="mx-auto max-w-6xl"><p className="text-sm font-bold uppercase tracking-[.2em] text-lime">Operations</p><h1 className="mt-3 font-display text-5xl">Drivers.</h1><div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{drivers.map((driver) => <article key={driver.id} className="rounded-2xl bg-paper p-6 text-ink"><div className="flex items-center justify-between"><h2 className="font-display text-2xl">{driver.name}</h2><span className="rounded-full bg-lime px-2 py-1 text-xs font-bold">{driver.status}</span></div><p className="mt-4 text-sm text-ink/60">{driver.phone} · {driver.licenseNumber}</p><p className="mt-4 text-sm">{driver._count.bookings} bookings</p></article>)}{!drivers.length && <p className="text-paper/60">No drivers found.</p>}</div></div></main>; }

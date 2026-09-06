@@ -1,0 +1,4 @@
+import { NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+export async function GET(request: Request) { try { await requireRole(['ADMIN', 'STAFF']); const { searchParams } = new URL(request.url); const page = Math.max(1, Number(searchParams.get('page') || 1)); const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') || 25))); const [data, total] = await Promise.all([prisma.booking.findMany({ include: { user: { select: { name: true, email: true } }, vehicle: true, payment: true, driver: true }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }), prisma.booking.count()]); return NextResponse.json({ data, pagination: { page, limit, total, pages: Math.ceil(total / limit) } }); } catch { return NextResponse.json({ error: 'You do not have permission to perform this action.' }, { status: 403 }); } }

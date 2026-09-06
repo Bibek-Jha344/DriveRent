@@ -1,0 +1,7 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
+import { createSession } from '@/lib/auth';
+const schema = z.object({ name: z.string().min(2).max(80), email: z.string().email(), password: z.string().min(8) });
+export async function POST(request: Request) { const form = await request.formData(); const parsed = schema.safeParse(Object.fromEntries(form)); if (!parsed.success) return NextResponse.json({ error: 'Please provide a valid name, email, and 8-character password.' }, { status: 400 }); const exists = await prisma.user.findUnique({ where: { email: parsed.data.email.toLowerCase() } }); if (exists) return NextResponse.json({ error: 'An account with this email already exists.' }, { status: 409 }); const role = await prisma.role.findUnique({ where: { name: 'CUSTOMER' } }); if (!role) return NextResponse.json({ error: 'System roles are not configured.' }, { status: 500 }); const user = await prisma.user.create({ data: { name: parsed.data.name, email: parsed.data.email.toLowerCase(), passwordHash: await bcrypt.hash(parsed.data.password, 12), roleId: role.id } }); const response = NextResponse.redirect(new URL('/dashboard', request.url)); response.cookies.set('driverent_session', await createSession(user.id), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7, path: '/' }); return response; }

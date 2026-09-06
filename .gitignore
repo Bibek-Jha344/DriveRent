@@ -1,0 +1,10 @@
+node_modules
+.next
+*.tsbuildinfo
+.env
+.env.local
+coverage
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
