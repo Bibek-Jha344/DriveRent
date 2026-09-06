@@ -22,3 +22,15 @@ Server components read through Prisma. Business rules live in `src/services`, wi
 `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint`, `npm run db:generate`, `npm run db:push`, `npm run db:seed`.
 
 Never commit `.env`. For production, replace the demo payment provider with a hosted provider, use a managed PostgreSQL instance, rotate `AUTH_SECRET`, configure object storage for vehicle images, and add automated browser and integration tests around authorization and booking races.
+
+## Production deployment
+
+DriveRent is configured for Vercel in `vercel.json`.
+
+1. Create a managed PostgreSQL database with Neon, Supabase, Railway, or another PostgreSQL provider.
+2. Import this GitHub repository into Vercel.
+3. Add `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, `PAYMENT_PROVIDER`, and `PAYMENT_SECRET_KEY` as Production environment variables.
+4. Apply the Prisma schema to the production database from a trusted shell with `npx prisma db push`, or add migrations before production use.
+5. Deploy using the configured `npm ci` install and `npm run build` command.
+
+Do not use local `.env` values in production. Use a strong random `AUTH_SECRET`, a restricted database user, and a real payment provider before accepting payments. The demo accounts and `DriveRent@2026` password are development-only.
